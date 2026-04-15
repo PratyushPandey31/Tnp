@@ -34,7 +34,7 @@ To test the multi-tier flow, use the following credentials:
 | :--- | :--- | :--- | :--- |
 | **Student** | Student Sign In | `Pravin Pandey` | N/A |
 | **Admin** | Admin Sign In | `Vikas Kumar` | (Requires Superadmin Approval) |
-| **Superadmin** | Authority Login | `superadmin@tnp.edu` | **Key:** `MacBook` / **Pass:** `MacAir@786` |
+| **Superadmin** | Authority Login | `superadmin@tnp.edu` | **Key:** `-` / **Pass:** `-` |
 ---
 ## 🚀 Getting Started
 1. **Clone & Install Dependencies:**
