@@ -1,0 +1,32 @@
+<div class="auth-page-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">TnP<span>Connect</span></div>
+      <h2>Create Student Account</h2>
+      <p>Join the TnP Connect community as a Student</p>
+    </div>
+
+    <div class="form-body">
+      <div class="input-group">
+        <label>Full Name</label>
+        <input type="text" #regName placeholder="e.g. Pravin Pandey" class="custom-input">
+      </div>
+
+      <div class="input-group">
+        <label>College Email</label>
+        <input type="email" placeholder="student@college.edu" class="custom-input">
+      </div>
+
+      <div class="input-group">
+        <label>Create Password</label>
+        <input type="password" placeholder="••••••••" class="custom-input">
+      </div>
+
+      <button class="btn-signin" (click)="submitRegister(regName.value)">Register as Student</button>
+    </div>
+
+    <div class="auth-footer">
+      Already a student? <a routerLink="/login">Sign in here</a>
+    </div>
+  </div>
+</div>

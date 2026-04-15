@@ -1,0 +1,68 @@
+<div class="auth-page-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">TnP<span>Connect</span></div>
+      <h2>Welcome Back</h2>
+      <p>Please enter your details to sign in</p>
+    </div>
+
+    <div class="form-body" *ngIf="!showSuperAdminLogin">
+      <div class="input-group">
+        <label>Full Name</label>
+        <input type="text" #userName placeholder="e.g. Vikas Kumar" class="custom-input" [disabled]="isAuthorizing">
+      </div>
+
+      <div class="input-group">
+        <label>College Email</label>
+        <input type="email" placeholder="student@college.edu" class="custom-input" [disabled]="isAuthorizing">
+      </div>
+
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" placeholder="••••••••" class="custom-input" [disabled]="isAuthorizing">
+      </div>
+
+      <div class="button-group">
+        <button class="btn-signin" [disabled]="isAuthorizing" (click)="submitLogin(userName.value, 'student')">
+          Sign In as Student
+        </button>
+        <button class="btn-signin admin" [disabled]="isAuthorizing" (click)="submitLogin(userName.value, 'admin')">
+          {{ isAuthorizing ? 'Access Pending...' : 'Sign In as Admin' }}
+        </button>
+      </div>
+
+      <div style="margin-top: 15px; text-align: center;">
+        <a href="javascript:void(0)" (click)="showSuperAdminLogin = true" style="font-size: 0.8rem; color: #64748b; text-decoration: none;">🔐 Principal / Superadmin Access</a>
+      </div>
+    </div>
+
+    <!-- Superadmin Specific Section -->
+    <div class="form-body" *ngIf="showSuperAdminLogin">
+      <div class="input-group">
+        <label>Principal Email</label>
+        <input type="email" #superEmail placeholder="superadmin@tnp.edu" class="custom-input">
+      </div>
+      <div class="input-group">
+        <label>Secret Key</label>
+        <input type="password" #secretKey placeholder="Enter Key" class="custom-input">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" #superPass placeholder="••••••••" class="custom-input">
+      </div>
+
+      <div class="button-group">
+        <button class="btn-signin admin" (click)="submitSuperAdminLogin(superEmail.value, secretKey.value, superPass.value)">
+          Verify Authority
+        </button>
+        <button class="btn-signin" (click)="showSuperAdminLogin = false" style="background: transparent; color: #64748b; border: 1px solid #cbd5e1;">
+          Back
+        </button>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      New student? <a routerLink="/register">Create account</a>
+    </div>
+  </div>
+</div>

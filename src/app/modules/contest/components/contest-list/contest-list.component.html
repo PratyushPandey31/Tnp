@@ -1,0 +1,237 @@
+<div class="dashboard-wrapper">
+  <header class="hero-section">
+    <div class="hero-content">
+      <h1>Contests <span class="accent">Dashboard</span></h1>
+      <p>Your gateway to top-tier career opportunities and technical excellence.</p>
+      
+      <div class="search-bar-mock">
+        <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Search by title or ID...">
+        <button class="btn-search" (click)="applyFilters()">Search</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Superadmin Authorization Hub -->
+    <div class="superadmin-panel" *ngIf="userRole === 'superadmin'">
+      <div class="panel-header">
+        <span class="lock-icon">🛡️</span>
+        <div>
+          <h4>Authorization Hub</h4>
+          <p>Review and grant access to Admin requests</p>
+        </div>
+      </div>
+      
+      <div class="request-list">
+        <div *ngIf="pendingAdminRequests.length === 0" class="no-requests">
+          All requests are recently cleared.
+        </div>
+        <div *ngFor="let name of pendingAdminRequests" class="request-item">
+          <span class="user-name">👤 {{ name }}</span>
+          <div class="actions">
+            <button class="btn-allow" (click)="onAuthorize(name)">Allow Access</button>
+            <button class="btn-dismiss" (click)="onDismiss(name)">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Analytics Dashboard -->
+    <div class="admin-stats-board" *ngIf="userRole === 'admin' || userRole === 'superadmin'">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+          <h3>Total Contests</h3>
+          <p>{{ totalContests }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);">🟢</div>
+        <div class="stat-info">
+          <h3>Live Now</h3>
+          <p>{{ liveContests }}</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.1);">⏳</div>
+        <div class="stat-info">
+          <h3>Upcoming</h3>
+          <p>{{ upcomingContests }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="section-header">
+      <div class="title-area">
+        <span class="pulse-dot"></span>
+        <h3>Active Opportunities</h3>
+      </div>
+      <div class="filter-pills">
+        <button class="pill" *ngIf="userRole === 'admin' || userRole === 'superadmin'" (click)="openCreateModal()" style="background-color: #10b981; color: white;">+ Create Contest</button>
+        <button class="pill" [class.active]="activeCategory === 'All'" (click)="applyFilters('All')">All</button>
+        <button class="pill" *ngIf="userRole === 'student'" [class.active]="activeCategory === 'My Activity'" (click)="applyFilters('My Activity')" style="color: #6d28d9;">My Activity</button>
+        <button class="pill" [class.active]="activeCategory === 'Coding'" (click)="applyFilters('Coding')">Coding</button>
+        <button class="pill" [class.active]="activeCategory === 'Aptitude'" (click)="applyFilters('Aptitude')">Aptitude</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div *ngFor="let c of filteredContests" class="contest-card" [class.card-completed]="c.status === 'Completed'">
+        <div class="card-header">
+          <span class="status-pill" [ngClass]="c.status">{{ c.status }}</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="countdown-badge" *ngIf="c.status === 'Upcoming'">{{ getDaysLeft(c.date) }}</span>
+            <span class="date-tag">{{ c.date | date:'MMM dd' }}</span>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <div class="icon-box" style="display: flex; align-items: center;">
+             <span *ngIf="c.type === 'Coding'">💻</span>
+             <span *ngIf="c.type === 'Aptitude'">🧠</span>
+             <span *ngIf="c.type === 'Quiz'">📝</span>
+             <span class="contest-id-badge" style="margin-left: auto; font-size: 0.8rem; font-weight: 600; background: #f1f5f9; padding: 4px 10px; border-radius: 12px; color: #475569;">#{{ c.id }}</span>
+          </div>
+          <h3>{{ c.title }}</h3>
+          <p>{{ c.description }}</p>
+        </div>
+        
+        <div class="card-footer">
+          <div class="info-meta">Category: <strong>{{ c.type }}</strong></div>
+          <div style="display: flex; gap: 8px;">
+            <button 
+              *ngIf="userRole === 'admin' || userRole === 'superadmin'"
+              class="action-button"
+              style="background-color: #ef4444; border-color: #ef4444;"
+              (click)="onDelete(c.id)">
+              Delete
+            </button>
+            <button 
+              *ngIf="userRole !== 'admin' && userRole !== 'superadmin'"
+              class="action-button" 
+              [disabled]="c.status === 'Completed' && !isRegistered(c.id)"
+              [ngClass]="{
+                'btn-registered': isRegistered(c.id) && c.status !== 'Completed' && activeCategory === 'My Activity',
+                'btn-report': isRegistered(c.id) && c.status === 'Completed'
+              }"
+              (click)="c.status === 'Completed' && isRegistered(c.id) ? onViewReport(c) : onRegister(c)">
+              <ng-container *ngIf="isRegistered(c.id) && activeCategory === 'My Activity'">
+                 {{ c.status === 'Completed' ? 'View Report 📈' : 'Registered ✓' }}
+              </ng-container>
+              <ng-container *ngIf="!(isRegistered(c.id) && activeCategory === 'My Activity')">
+                {{ c.status === 'Completed' ? (isRegistered(c.id) ? 'View Report 📈' : 'Closed') : 'Register Now' }}
+              </ng-container>
+            </button>
+            <button 
+              *ngIf="userRole === 'admin' || userRole === 'superadmin'"
+              class="action-button"
+              style="background-color: #3b82f6; border-color: #3b82f6; color: white;"
+              (click)="onModify(c)">
+              Modify
+            </button>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="success-card" (click)="$event.stopPropagation()">
+    <div class="success-icon-wrap">✓</div>
+    <h2>Registration Successful!</h2>
+    <p>Your registration for <strong>{{ registeredEvent }}</strong> is successful.</p>
+    <p class="sub-message">
+      Thank you for registering! A confirmation email has been sent to your registered email address.
+    </p>
+    <button class="btn-confirm" (click)="closeModal()">Okay, Got it!</button>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="success-card" (click)="$event.stopPropagation()" style="text-align: left; max-width: 500px;">
+    <h2 style="margin-bottom: 20px; font-weight: 700; color: #1e293b;">Create New Contest</h2>
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Title</label>
+      <input type="text" [(ngModel)]="newContest.title" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;">
+    </div>
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Description</label>
+      <textarea [(ngModel)]="newContest.description" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" rows="3"></textarea>
+    </div>
+    <div style="margin-bottom: 15px; display: flex; gap: 15px;">
+      <div style="flex: 1;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Type</label>
+        <select [(ngModel)]="newContest.type" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+          <option value="Coding">Coding</option>
+          <option value="Aptitude">Aptitude</option>
+          <option value="Quiz">Quiz</option>
+        </select>
+      </div>
+      <div style="flex: 1;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Status</label>
+        <select [(ngModel)]="newContest.status" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+          <option value="Live">Live</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
+      <button class="pill" (click)="closeCreateModal()" style="border: 1px solid #cbd5e1;">Cancel</button>
+      <button class="action-button" (click)="onCreateContest()" style="background-color: #1e40af; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Create Contest</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModifyModal" (click)="closeModifyModal()">
+  <div class="success-card" (click)="$event.stopPropagation()" style="text-align: left; max-width: 500px;">
+    <h2 style="margin-bottom: 20px; font-weight: 700; color: #1e293b;">Modify Contest Details</h2>
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Title</label>
+      <input type="text" [(ngModel)]="modifyingContest.title" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;">
+    </div>
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Description</label>
+      <textarea [(ngModel)]="modifyingContest.description" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" rows="3"></textarea>
+    </div>
+    <div style="margin-bottom: 15px; display: flex; gap: 15px;">
+      <div style="flex: 1;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Type</label>
+        <select [(ngModel)]="modifyingContest.type" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+          <option value="Coding">Coding</option>
+          <option value="Aptitude">Aptitude</option>
+          <option value="Quiz">Quiz</option>
+        </select>
+      </div>
+      <div style="flex: 1;">
+        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #475569; font-size: 0.9rem;">Status</label>
+        <select [(ngModel)]="modifyingContest.status" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+          <option value="Live">Live</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
+      <button class="pill" (click)="closeModifyModal()" style="border: 1px solid #cbd5e1;">Cancel</button>
+      <button class="action-button" (click)="onSaveModifyContest()" style="background-color: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
+  <div class="success-card" (click)="$event.stopPropagation()" style="text-align: left; max-width: 450px;">
+    <h2 style="margin-bottom: 20px; font-weight: 800; color: #1e293b; text-align: center;">Performance Report</h2>
+    <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+      <h3 style="color: #6d28d9; margin-bottom: 15px;">{{ activeReport.title }}</h3>
+      <div style="font-size: 3.5rem; font-weight: 800; color: #1e293b; line-height: 1;">{{ activeReport.score }}<span style="font-size: 1.5rem; color: #94a3b8;">/100</span></div>
+    </div>
+    <div style="text-align: center; margin-bottom: 25px;">
+      <span style="padding: 8px 16px; border-radius: 20px; font-weight: 700; white-space: nowrap;" 
+            [ngStyle]="{'background': activeReport.score >= 50 ? '#dcfce7' : '#fee2e2', 'color': activeReport.score >= 50 ? '#15803d' : '#991b1b'}">
+        Status: {{ activeReport.status }}
+      </span>
+    </div>
+    <button class="btn-confirm" (click)="closeReportModal()" style="background: #6d28d9;">Close Report</button>
+  </div>
+</div>

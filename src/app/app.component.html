@@ -1,0 +1,37 @@
+<nav class="navbar">
+  <div class="logo" routerLink="/">TnP<span>Connect</span></div>
+  
+  <div class="nav-links">
+    <a routerLink="/contests" routerLinkActive="active">Contests</a>
+
+    <ng-container *ngIf="!loggedInUser">
+      <a routerLink="/login" routerLinkActive="active">Login</a>
+      <a routerLink="/register" class="btn-reg">Register</a>
+    </ng-container>
+
+    <ng-container *ngIf="loggedInUser">
+      <span class="welcome-text">Welcome, {{ loggedInUser.name }} ({{ loggedInUser.role | titlecase }})!</span>
+      <button class="logout-btn" (click)="onLogout()">Logout</button>
+    </ng-container>
+  </div>
+</nav>
+
+<main class="content-area">
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="main-footer">
+  <div class="footer-logo">TnP<span>Connect</span></div>
+  <p>Empowering Students for a Brighter Career.</p>
+  <div class="copyright">© 2026 TnP Connect • All Rights Reserved.</div>
+</footer>
+
+<!-- Global Toast Container -->
+<div id="toast-container">
+  <div *ngFor="let toast of toasts" class="custom-toast" [ngClass]="{'toast-success': toast.type === 'success', 'toast-error': toast.type === 'error'}" (click)="removeToast(toast.id)">
+    <span *ngIf="toast.type === 'success'">✅</span>
+    <span *ngIf="toast.type === 'error'">🚨</span>
+    <span *ngIf="toast.type === 'info'">ℹ️</span>
+    {{ toast.message }}
+  </div>
+</div>
